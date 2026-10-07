@@ -762,7 +762,7 @@ def main():
         write("in_game/gui/cmf/cmf_alert_manager.gui", alerts)
     write("in_game/common/traits/kef_child_traits_fix.txt", traits(), FIX_OUT)
     write("in_game/common/child_educations/kef_education_fix.txt", EDUCATIONS, FIX_OUT)
-    fix_meta = {"name": "Education Fix (Kipsta)", "id": "grackbox.education_fix_kipsta", "version": "1.0.0", "game_id": "eu5",
+    fix_meta = {"name": "Education Fix (Kipsta) [LOCAL]", "id": "grackbox.education_fix_kipsta", "version": "1.0.0", "game_id": "eu5",
                 "supported_game_version": "1.4.*",
                 "short_description": "Kipsta's fix for 1.4 child education: stronger educations and rebalanced child traits.",
                 "tags": ["Balance", "1.4"], "relationships": [], "game_custom_data": {}}
@@ -790,7 +790,7 @@ def main():
             lines[f"cea__paid_traits_i{n}_name"] = f"@cea_{t}! [ShowTraitName('{t}')]"
         write(f"main_menu/localization/{lang}/cea_l_{lang}.yml",
               f"l_{lang}:\n" + "".join(f' {k}: "{v}"\n' for k, v in lines.items()))
-    meta = {"name": "Child Education", "id": "grackbox.child_education_alert", "version": "1.0.0", "game_id": "eu5",
+    meta = {"name": "Child Education [LOCAL]", "id": "grackbox.child_education_alert", "version": "1.0.0", "game_id": "eu5",
             "supported_game_version": "1.4.*",
             "short_description": "Alert and auto-education for heirs and their children.",
             "tags": ["Utilities", "1.4"],
