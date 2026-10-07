@@ -1,0 +1,30 @@
+[h1]Child Education[/h1]
+Brings back the alert for children who could get a better education (1.4 shows it only for the heir), and can pick their education for you.
+
+[b]Requires:[/b] [url=https://steamcommunity.com/sharedfiles/filedetails/?id=3692202776]Community Mod Framework[/url] (the alert bar and the mod menu).
+
+[h2]Alert[/h2]
+[list]
+[*]An alert on the Community Mod Framework alert bar when a child gets the balanced education or none yet.
+[*]Its tooltip names the children. Clicking it opens their cards one after another.
+[*]Checked once a month. Children under 3 are left alone, as in the game.
+[/list]
+
+[h2]Settings[/h2]
+Open the mod menu, or right-click the education button in a child's character window.
+[list]
+[*][b]Who counts:[/b] the heirs in the first places of the line of succession with their children and grandchildren, or every child of the ruler's family at court.
+[*][b]Places in line:[/b] how many places of the line of succession count.
+[*][b]Include women:[/b] count girls too.
+[*][b]Future royals only:[/b] count only children who stay in the crown estate once the first heir rules. The heir's cousins and their children become nobles then.
+[*][b]Auto-education:[/b] off, by traits, or administrative, diplomatic or military for everyone. Educations you chose yourself are kept.
+[/list]
+
+[h2]Paid education[/h2]
+A table of the child traits that change education, with a box for boys and one for girls. Children with a checked trait get the expensive in-depth education, paid as in the game. If the country can't afford it, they get the auto-education choice and are moved to the paid one once it can.
+
+[h2]Good to know[/h2]
+[list]
+[*]Overrides [i]character_lateralview.gui[/i] (the character window) for the right-click, so mods that change the same file may conflict.
+[*]Also carries a fix for the Community Mod Framework alert tooltip, which sometimes shows "_name" and "_tooltip" instead of the text. It will be removed once the framework has its own fix.
+[/list]

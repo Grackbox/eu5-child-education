@@ -8,10 +8,13 @@
 """
 import json
 import os
+import re
 import shutil
 
 OUT = os.path.expanduser("~/Documents/Paradox Interactive/Europa Universalis V/mod/child_education_alert")
 FIX_OUT = os.path.expanduser("~/Documents/Paradox Interactive/Europa Universalis V/mod/education_fix_kipsta")
+GAME = r"E:\SteamLibrary\steamapps\common\Europa Universalis V\game"   # the vanilla character window is patched from here
+CMF = r"E:\SteamLibrary\steamapps\workshop\content\3450310\3692202776"   # Community Mod Framework, for its alert tooltip fix
 LANGS = ["english", "russian", "german", "french", "spanish", "braz_por", "polish", "turkish", "japanese", "korean", "simp_chinese"]
 
 PAID_TRIGGER = """# Scope: character. Has a trait the player picked for the paid in-depth education.
@@ -70,14 +73,18 @@ cea_is_tracked_child = {
 	}
 }
 
-# Scope: character, root is the country. In the first "depth" places of the line of succession.
+# Scope: character, root is the country. In the first "depth" places of the line of succession; with "all" (2), anywhere in it.
 cea_is_counted_heir = {
 	# the first heir is told by is_heir: the game may count the places from 0, which left that heir's children out
 	OR = {
 		is_heir = yes
 		AND = {
 			heir_position > 0
-			heir_position <= global_var:cea_depth
+			# "all" (2) counts every place: "places in line" is greyed out then, so it must not count
+			OR = {
+				global_var:cea_who ?= 2
+				heir_position <= global_var:cea_depth
+			}
 		}
 	}
 }
@@ -355,6 +362,7 @@ cea_register_cmf_mod = {
 	cmm_register_bool_setting = { mod_id = cea setting_id = alert_enabled tab_id = settings group_id = settings default_value = 1 }
 	cmm_register_dropdown_setting = { mod_id = cea setting_id = who tab_id = settings group_id = settings default_index = 1 option_count = 2 }
 	cmm_register_slider_setting = { mod_id = cea setting_id = depth tab_id = settings group_id = settings default_value = 3 min_value = 1 max_value = 20 step_value = 1 }
+	cmm_add_scripted_gui = { mod_id = cea setting_id = depth }
 	cmm_register_bool_setting = { mod_id = cea setting_id = women tab_id = settings group_id = settings default_value = 0 }
 	cmm_register_bool_setting = { mod_id = cea setting_id = future_royals tab_id = settings group_id = settings default_value = 0 }
 	cmm_register_dropdown_setting = { mod_id = cea setting_id = auto tab_id = settings group_id = settings default_index = 1 option_count = 5 }
@@ -442,6 +450,21 @@ cea_monthly_check = {
 }
 """
 
+# A right click on the education buttons of the character window (the action row and the icon in the header) opens our
+# page of the CMF mod menu, as Construction Manager does on its auto-expand row. The registration pass runs first, as in
+# CMF's own menu button. Kept off when the game has a right click there itself.
+OPEN_SETTINGS = """action_tooltip = {
+	click_type = right
+	click_mode = single
+	visible = "[Not(UIActionProvider.IsRightClickVisible)]"
+	title = "CEA_OPEN_SETTINGS"
+	on_action = "[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	on_action = "[GetVariableSystem.Set('cmm_window_open', 'true')]"
+	on_action = "[GetVariableSystem.Set('cmm_selected_mod', 'cea')]"
+	on_action = "[GetVariableSystem.Set('cmm_selected_tab', 'cea__settings')]"
+}
+"""
+
 PAID = ["child_prodigy", "child_gifted", "healthy", "child_intelligent", "child_gregarious", "child_rowdy",
         "child_ambitious", "child_gallant", "child_shrewd", "child_slow", "child_idiot", "sickly"]   # every trait that changes education
 
@@ -470,7 +493,27 @@ WIDGET = """widget = {
 }
 """
 
-SCRIPTED_GUI = """# Scope: country. After a click opened a child's card, the next click opens the next one.
+SCRIPTED_GUI = """# Scope: country (CMF's home country). "Places in line" is greyed out unless "Who counts" is the heirs option; CMF reads
+# is_valid from <mod>__<setting>_on_changed. Not is_shown: hiding the row right under the "Who counts" dropdown re-laid
+# the menu out while the dropdown was closing, and it then showed the old option and would not open again.
+cea__depth_on_changed = {
+	scope = country
+	is_valid = {
+		NOT = { global_var:cea_who ?= 2 }
+	}
+}
+
+# Scope: country (CMF's home country). CMF needs this for a list setting: it applies the click, then the settings are
+# copied as on any other change.
+cea__paid_traits_on_changed = {
+	scope = country
+	effect = {
+		cmm_apply_list_change = { setting = cea__paid_traits }
+		cea_sync_settings = yes
+	}
+}
+
+# Scope: country. After a click opened a child's card, the next click opens the next one.
 cea_show_next_child = {
 	effect = {
 		cea_advance_current = yes
@@ -554,15 +597,15 @@ TEXT = {
         "cea__who_name": "Кого учитывать",
         "cea__who_desc": "Каких детей учитывают уведомление и автообразование.",
         "cea__who_option_1_name": "Наследники, их дети и внуки",
-        "cea__who_option_1_desc": "Наследники из очереди престолонаследия, их дети и внуки. Женщины — по настройке «Учитывать женщин».",
+        "cea__who_option_1_desc": "Наследники из первых мест очереди престолонаследия (сколько — задаёт «Мест в очереди»), их дети и внуки.",
         "cea__who_option_2_name": "Все дети семьи при дворе",
-        "cea__who_option_2_desc": "Наследники, их дети и внуки, а также вся династия правителя и его дети и внуки, даже из другой династии.",
+        "cea__who_option_2_desc": "Все наследники из очереди при нашем дворе, их дети и внуки, а также вся династия правителя и его дети и внуки, даже из другой династии.",
         "cea__depth_name": "Мест в очереди",
-        "cea__depth_desc": "Сколько первых мест очереди престолонаследия учитывать (для варианта с наследниками). Например, 3: первые три наследника, мужчины из них и их дети и внуки.",
+        "cea__depth_desc": "Сколько первых мест очереди престолонаследия учитывать. Только для варианта с наследниками, в остальных неактивно. Например, 3: первые три наследника, мужчины из них и их дети и внуки.",
         "cea__women_name": "Учитывать женщин",
         "cea__women_desc": "Учитывать также девочек. Выключено — только мальчики. Действует на уведомление, автообразование и платное образование, при любом варианте «Кого учитывать».",
         "cea__future_royals_name": "Только будущее сословие правителей",
-        "cea__future_royals_desc": "Учитывать только тех, кто останется в сословии правителей, когда править начнёт первый в очереди: его самого и его близких родственников (детей, внуков, братьев и сестёр, племянников, родителей, дядь и тёть). Остальные при смене правителя станут дворянами.",
+        "cea__future_royals_desc": "Сужает выбор «Кого учитывать»: из выбранных там детей остаются только те, кто будет в сословии правителей, когда править начнёт первый в очереди, — он сам и его близкие родственники (дети, внуки, братья и сёстры, племянники, родители, дяди и тёти). Например, дети его братьев и сестёр остаются, а двоюродные братья и сёстры и их дети отсеиваются: при смене правителя они станут дворянами.",
         "cea__auto_name": "Автообразование",
         "cea__auto_desc": "Раз в месяц ставит образование детям со сбалансированным образованием или без него. Выбранное вручную не трогает.",
         "cea__auto_option_1_name": "Выключено", "cea__auto_option_1_desc": "Образование выбираете вы.",
@@ -570,6 +613,7 @@ TEXT = {
         "cea__auto_option_3_name": "Административное", "cea__auto_option_3_desc": "Всем административное образование.",
         "cea__auto_option_4_name": "Дипломатическое", "cea__auto_option_4_desc": "Всем дипломатическое образование.",
         "cea__auto_option_5_name": "Военное", "cea__auto_option_5_desc": "Всем военное образование.",
+        "CEA_OPEN_SETTINGS": "Настройки Child Education",
         "cea_child_education_name": "Детям можно дать более качественное образование",
         "cea_child_education_tooltip": "Один или несколько детей получают сбалансированное образование или ещё не начали учиться. "
                                        "Административное, дипломатическое или военное образование быстрее развивает навык.\\n\\n"
@@ -586,15 +630,15 @@ TEXT = {
         "cea__who_name": "Who counts",
         "cea__who_desc": "Which children the alert and the auto-education look at.",
         "cea__who_option_1_name": "Heirs, their children and grandchildren",
-        "cea__who_option_1_desc": "Heirs in the line of succession, their children and grandchildren. Women only with Include women on.",
+        "cea__who_option_1_desc": "Heirs in the first places of the line of succession (as many as Places in line), their children and grandchildren.",
         "cea__who_option_2_name": "All family children at court",
-        "cea__who_option_2_desc": "The heirs, their children and grandchildren, plus the ruler's dynasty and the ruler's children and grandchildren, even of another dynasty.",
+        "cea__who_option_2_desc": "Every heir in the line at our court, their children and grandchildren, plus the ruler's dynasty and the ruler's children and grandchildren, even of another dynasty.",
         "cea__depth_name": "Places in line",
-        "cea__depth_desc": "How many first places of the line of succession count (for the heirs option). For example 3: the first three heirs, the men among them, and their children and grandchildren.",
+        "cea__depth_desc": "How many first places of the line of succession count. Only for the heirs option; greyed out otherwise. For example 3: the first three heirs, the men among them, and their children and grandchildren.",
         "cea__women_name": "Include women",
         "cea__women_desc": "Also count girls. Off: boys only. Applies to the alert, the auto-education and the paid education, with either Who counts option.",
         "cea__future_royals_name": "Future royals only",
-        "cea__future_royals_desc": "Count only those who stay in the crown estate once the first heir rules: the heir and the heir's close relatives (children, grandchildren, siblings, nephews and nieces, parents, aunts and uncles). The rest become nobles when the ruler changes.",
+        "cea__future_royals_desc": "Narrows Who counts: of the children it picks, only those stay who will be in the crown estate once the first heir rules, the heir and the heir's close relatives (children, grandchildren, siblings, nephews and nieces, parents, aunts and uncles). For example, the children of the heir's siblings stay, while the heir's cousins and their children drop out: they become nobles when the ruler changes.",
         "cea__auto_name": "Auto-education",
         "cea__auto_desc": "Once a month, sets an education for children on the balanced education or none. Educations you chose yourself are kept.",
         "cea__auto_option_1_name": "Off", "cea__auto_option_1_desc": "You pick the education.",
@@ -602,6 +646,7 @@ TEXT = {
         "cea__auto_option_3_name": "Administrative", "cea__auto_option_3_desc": "An administrative education for every child.",
         "cea__auto_option_4_name": "Diplomatic", "cea__auto_option_4_desc": "A diplomatic education for every child.",
         "cea__auto_option_5_name": "Military", "cea__auto_option_5_desc": "A military education for every child.",
+        "CEA_OPEN_SETTINGS": "Child Education settings",
         "cea_child_education_name": "Children can have a better education",
         "cea_child_education_tooltip": "One or more children get the balanced education or haven't started one yet. "
                                        "An administrative, diplomatic or military education makes that skill grow faster.\\n\\n"
@@ -622,6 +667,49 @@ def write(path, text, root=None):
         fh.write(text)
 
 
+def cmf_alert_manager():
+    """CMF's alert bar with the alert tooltip reading the alert key from Scope, or None once CMF has fixed it.
+
+    CMF 2.5.0 passes the key through the text context into CString, which sometimes stays empty: the tooltip then reads
+    "_name" and "_tooltip" (reported as community-mod-framework issue 16). Our mod loads after CMF (it depends on it),
+    so this copy replaces CMF's file; drop it once CMF ships the fix.
+    """
+    with open(os.path.join(CMF, "in_game", "gui", "cmf", "cmf_alert_manager.gui"), encoding="utf-8-sig") as fh:
+        text = fh.read()
+    if "CString" not in text:
+        print("CMF's alert tooltip no longer uses CString: the cmf_alert_manager.gui fix is left out")
+        return None
+    hook = ('                lowpriotextcontext =  "[Scope.GetFlagName]"\n'
+            '                ontextcontextchanged = "[SetCStringFromTextContext(PdxGuiWidget.AccessSelf)]"\n')
+    if text.count(hook) != 1 or text.count("CString.GetString") != 2:   # CMF changed the file: check it before building
+        raise SystemExit("cmf_alert_manager.gui: the alert tooltip is not where the fix expects it")
+    return text.replace(hook, "").replace("CString.GetString", "Scope.GetFlagName")
+
+
+def trait_icons():
+    """Each paid trait's icon on its background (green for child traits, red for health ones), as uncompressed DDS."""
+    from PIL import Image   # only the build needs Pillow
+    src = os.path.join(GAME, "main_menu", "gfx", "interface", "icons", "traits")
+    for t in PAID:
+        bg = "health" if t in ("healthy", "sickly") else "child"
+        icon = Image.open(os.path.join(src, "background", f"{bg}_background.dds")).convert("RGBA").resize((128, 128), Image.LANCZOS)
+        icon.alpha_composite(Image.open(os.path.join(src, f"{t}.dds")).convert("RGBA").resize((88, 88), Image.LANCZOS), (20, 20))
+        full = os.path.join(OUT, "in_game", "gfx", "interface", "icons", "cea_traits", f"{t}.dds")
+        os.makedirs(os.path.dirname(full), exist_ok=True)
+        icon.save(full)
+
+
+def character_window():
+    """The vanilla character window with OPEN_SETTINGS on both education buttons."""
+    with open(os.path.join(GAME, "in_game", "gui", "character_lateralview.gui"), encoding="utf-8-sig") as fh:
+        text = fh.read()
+    anchor = re.compile(r'(using = button_action_provider(?:_base)?\n(\t+)datacontext = "\[Character\.GetEducation\]"\n)')
+    text, n = anchor.subn(lambda m: m.group(1) + "".join(m.group(2) + line + "\n" for line in OPEN_SETTINGS.splitlines()), text)
+    if n != 2:   # a game patch moved the buttons: check the file before building
+        raise SystemExit(f"character_lateralview.gui: {n} education buttons found, expected 2")
+    return text
+
+
 def traits():
     out = ["# Education fix by Kipsta (Paradox forum, \"Education bugged, all characters now idiots\"):",
            "# the 1.4 child traits gave too little education, so most children grew up with low skills.", ""]
@@ -635,23 +723,43 @@ def main():
     for d in (OUT, FIX_OUT):
         if os.path.isdir(d):
             shutil.rmtree(d)
-    # a box per trait and per sex: tab paid_m for boys, paid_f for girls
+    # one tab, a row per trait (paid_traits list item n = PAID[n-1]) with a box for boys (field slot 1) and for girls (slot 2)
     paid_traits = "".join(f"\t\tAND = {{\n\t\t\tis_female = {'yes' if x == 'f' else 'no'}\n\t\t\thas_trait = {t}\n"
                           f"\t\t\thas_global_variable = cea_paid{x}_{t}\n\t\t}}\n" for x in "mf" for t in PAID)
     # a scripted trigger has to live with the triggers: in the effects file the game took it for an effect, and as a
     # condition it always passed, so every child got the paid education
     write("in_game/common/scripted_triggers/cea_triggers.txt", TRIGGERS + "\n" + PAID_TRIGGER.replace("PAID_TRAITS", paid_traits))
-    paid_sync = "".join(f"\tcea_copy_bool = {{ setting = cea__paid{x}_{t} alias = cea_paid{x}_{t} }}\n" for x in "mf" for t in PAID)
-    paid_register = "".join(f"\tcmm_register_bool_setting = {{ mod_id = cea setting_id = paid{x}_{t} tab_id = paid_{x} group_id = paid_{x} default_value = 0 }}\n"
-                            for x in "mf" for t in PAID)
+    paid_sync = "".join(f"\tcea_copy_bool = {{ setting = cea__paid_traits_i{n}_f{slot} alias = cea_paid{x}_{t} }}\n"
+                        for slot, x in ((1, "m"), (2, "f")) for n, t in enumerate(PAID, 1))
+    # earlier versions had a tab per sex with a box per trait (cea__paidm_<trait>, cea__paidf_<trait>): their ticks are
+    # moved into the list once per save
+    paid_moved = "".join(f"\t\tif = {{\n\t\t\tlimit = {{\n\t\t\t\tis_key_in_variable_map = {{ name = cmm target = flag:cea__paid{x}_{t} }}\n"
+                         f"\t\t\t\t\"variable_map(cmm|flag:cea__paid{x}_{t})\" >= 1\n\t\t\t}}\n"
+                         f"\t\t\tcmm_set_list_field_value = {{ mod_id = cea setting_id = paid_traits field_id = {field} item = {n} value = 1 }}\n\t\t}}\n"
+                         for field, x in (("boys", "m"), ("girls", "f")) for n, t in enumerate(PAID, 1))
+    paid_register = (f"\tcmm_register_settings_list = {{ mod_id = cea setting_id = paid_traits tab_id = paid item_count = {len(PAID)} is_ordered = 0 }}\n"
+                     "\tcmm_register_list_bool_field = { mod_id = cea setting_id = paid_traits field_id = boys default_value = 0 }\n"
+                     "\tcmm_register_list_bool_field = { mod_id = cea setting_id = paid_traits field_id = girls default_value = 0 }\n"
+                     "\tif = {\n\t\tlimit = { NOT = { has_variable = cea_paid_moved } }\n" + paid_moved +
+                     "\t\tset_variable = { name = cea_paid_moved value = yes }\n\t}\n")
     paid_debug = ""
     paid_state = ""
     effects = EFFECTS.replace("PAID_DEBUG", paid_debug).replace("PAID_TRAITS", paid_traits).replace("PAID_SYNC", paid_sync).replace("PAID_REGISTER", paid_register)
     write("in_game/common/scripted_effects/cea_effects.txt", effects)
     write("in_game/common/on_action/cea_on_actions.txt", ON_ACTIONS.replace("PAID_STATE_LOG", paid_state))
     write("in_game/gui/cea_open_child.gui", WIDGET)
+    # @cea_<trait>! in the paid list's row names: the game has no text icons for traits, and a text icon is one picture,
+    # so each is the trait's icon put on its background as the character window shows it
+    trait_icons()
+    write("in_game/gui/cea_trait_texticons.gui", "".join(
+        f"texticon = {{\n\ticon = cea_{t}\n\ticonsize = {{\n\t\ttexture = \"gfx/interface/icons/cea_traits/{t}.dds\"\n"
+        f"\t\tsize = {{ 28 28 }}\n\t\toffset = {{ 0 7 }}\n\t\tfontsize = 16\n\t}}\n}}\n\n" for t in PAID))
     write("in_game/gui/scripted_widgets/cea_scripted_widgets.txt", "gui/cea_open_child.gui = cea_open_child_widget\n")
     write("in_game/common/scripted_guis/cea_scripted_guis.txt", SCRIPTED_GUI)
+    write("in_game/gui/character_lateralview.gui", character_window())
+    alerts = cmf_alert_manager()
+    if alerts:
+        write("in_game/gui/cmf/cmf_alert_manager.gui", alerts)
     write("in_game/common/traits/kef_child_traits_fix.txt", traits(), FIX_OUT)
     write("in_game/common/child_educations/kef_education_fix.txt", EDUCATIONS, FIX_OUT)
     fix_meta = {"name": "Education Fix (Kipsta)", "id": "grackbox.education_fix_kipsta", "version": "1.0.0", "game_id": "eu5",
@@ -664,20 +772,22 @@ def main():
         ru = lang == "russian"
         paid_desc = ("Детям с отмеченными чертами раз в месяц ставится дорогое углублённое образование, с оплатой как в игре. Если денег не хватает, ставится обычное по настройке «Автообразование», а платное — когда деньги появятся. Работает и при выключенном автообразовании."
                      if ru else "Children with the checked traits get the expensive in-depth education once a month, paid as in the game. If the country can't afford it, the Auto-education setting applies, and the paid one once it can. Works even with auto-education off.")
-        for x, ru_n, en_n in (("m", "мальчики", "boys"), ("f", "девочки", "girls")):
-            lines[f"cea__paid_{x}_name"] = f"Платное: {ru_n}" if ru else f"Paid: {en_n}"
-            lines[f"cea__paid_{x}__paid_{x}_name"] = (f"Платное углублённое образование: {ru_n}" if ru else f"Expensive in-depth education: {en_n}")
-            lines[f"cea__paid_{x}__paid_{x}_desc"] = paid_desc
+        lines["cea__paid_name"] = "Платное образование" if ru else "Paid education"
+        for key in ("cea__paid__paid_traits", "cea__paid_traits"):
+            lines[f"{key}_name"] = "Дорогое углублённое образование" if ru else "Expensive in-depth education"
+            lines[f"{key}_desc"] = paid_desc
+        lines["cea__paid_traits"] = "cea__paid_traits"
+        lines["cea__paid_traits_item_column_name"] = "Черта" if ru else "Trait"
+        for field, ru_name, ru_whom, en_n in (("boys", "Мальчики", "мальчикам", "boys"), ("girls", "Девочки", "девочкам", "girls")):
+            lines[f"cea__paid_traits__{field}_name"] = ru_name if ru else en_n.capitalize()
+            lines[f"cea__paid_traits__{field}_desc"] = f"Платное образование {ru_whom} с этой чертой." if ru else f"Paid education for {en_n} with this trait."
         # the children's names, as links to them
         lines["cea_child_education_tooltip"] += "\\n" + "".join(
             f"[AddLocalizationIf(GetPlayer.MakeScope.GetVariable('cea_child_{k}').IsSet, 'CEA_CHILD_{k}')]" for k in range(1, LISTED + 1))
         for k in range(1, LISTED + 1):
             lines[f"CEA_CHILD_{k}"] = f"\\n• [GetPlayer.MakeScope.GetVariable('cea_child_{k}').GetCharacter.GetName]"
-        for x in "mf":
-            for t in PAID:
-                lines[f"cea__paid{x}_{t}"] = f"cea__paid{x}_{t}"
-                lines[f"cea__paid{x}_{t}_name"] = f"[ShowTraitName('{t}')]"
-                lines[f"cea__paid{x}_{t}_desc"] = ("Платное образование детям с чертой" if ru else "Paid education for children with") + f" ${t}$."
+        for n, t in enumerate(PAID, 1):
+            lines[f"cea__paid_traits_i{n}_name"] = f"@cea_{t}! [ShowTraitName('{t}')]"
         write(f"main_menu/localization/{lang}/cea_l_{lang}.yml",
               f"l_{lang}:\n" + "".join(f' {k}: "{v}"\n' for k, v in lines.items()))
     meta = {"name": "Child Education", "id": "grackbox.child_education_alert", "version": "1.0.0", "game_id": "eu5",
@@ -688,6 +798,7 @@ def main():
                                "resource_type": "mod", "version": "2.*"}],
             "game_custom_data": {}}
     write(".metadata/metadata.json", json.dumps(meta, indent=4, ensure_ascii=False) + "\n")
+    shutil.copy(os.path.join(os.path.dirname(os.path.abspath(__file__)), "thumbnail.png"), os.path.join(OUT, ".metadata", "thumbnail.png"))
     print("->", OUT)
 
 
