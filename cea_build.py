@@ -1,6 +1,6 @@
 """Builds the EU5 mod "Child Education" into the local mod folder.
 
-* An alert (through the Community Mod Framework alert bar) for children on the balanced education or none yet:
+* An alert (through the Community Mod Framework alert bar) for children on the balanced education:
   1.4 dropped the game's own alert for the dynasty's children.
 * Settings in the CMF mod menu: the alert on/off, which children count, and automatic education.
 * Kipsta's education fix (Paradox forum, "Education bugged, all characters now idiots") goes into a mod of its own,
@@ -593,7 +593,7 @@ TEXT = {
         "cea__settings__settings_name": "Образование детей",
         "cea__settings__settings_desc": "Уведомление и автообразование проверяются раз в месяц.",
         "cea__alert_enabled_name": "Уведомление",
-        "cea__alert_enabled_desc": "Показывать уведомление, когда у ребёнка сбалансированное образование или его ещё нет.",
+        "cea__alert_enabled_desc": "Показывать уведомление, когда у ребёнка сбалансированное образование.",
         "cea__who_name": "Кого учитывать",
         "cea__who_desc": "Каких детей учитывают уведомление и автообразование.",
         "cea__who_option_1_name": "Наследники, их дети и внуки",
@@ -607,7 +607,7 @@ TEXT = {
         "cea__future_royals_name": "Только будущее сословие правителей",
         "cea__future_royals_desc": "Сужает выбор «Кого учитывать»: из выбранных там детей остаются только те, кто будет в сословии правителей, когда править начнёт первый в очереди, — он сам и его близкие родственники (дети, внуки, братья и сёстры, племянники, родители, дяди и тёти). Например, дети его братьев и сестёр остаются, а двоюродные братья и сёстры и их дети отсеиваются: при смене правителя они станут дворянами.",
         "cea__auto_name": "Автообразование",
-        "cea__auto_desc": "Раз в месяц ставит образование детям со сбалансированным образованием или без него. Выбранное вручную не трогает.",
+        "cea__auto_desc": "Раз в месяц ставит образование детям со сбалансированным образованием. Выбранное вручную не трогает.",
         "cea__auto_option_1_name": "Выключено", "cea__auto_option_1_desc": "Образование выбираете вы.",
         "cea__auto_option_2_name": "По трейтам", "cea__auto_option_2_desc": "Незаурядный ум — административное, коммуникабельность — дипломатическое, непоседливость — военное; честолюбие, благородство и цепкий ум — тот из двух навыков, что выше; остальные — по лучшему навыку.",
         "cea__auto_option_3_name": "Административное", "cea__auto_option_3_desc": "Всем административное образование.",
@@ -615,7 +615,7 @@ TEXT = {
         "cea__auto_option_5_name": "Военное", "cea__auto_option_5_desc": "Всем военное образование.",
         "CEA_OPEN_SETTINGS": "Настройки Child Education",
         "cea_child_education_name": "Детям можно дать более качественное образование",
-        "cea_child_education_tooltip": "Один или несколько детей получают сбалансированное образование или ещё не начали учиться. "
+        "cea_child_education_tooltip": "Один или несколько детей получают сбалансированное образование. "
                                        "Административное, дипломатическое или военное образование быстрее развивает навык.\\n\\n"
                                        "Клик открывает карточки детей по очереди. Кого учитывать, задаётся в меню модов. Проверяется раз в месяц.",
     },
@@ -626,7 +626,7 @@ TEXT = {
         "cea__settings__settings_name": "Child Education",
         "cea__settings__settings_desc": "The alert and the auto-education are checked once a month.",
         "cea__alert_enabled_name": "Alert",
-        "cea__alert_enabled_desc": "Show an alert when a child gets the balanced education or none yet.",
+        "cea__alert_enabled_desc": "Show an alert when a child is on the balanced education.",
         "cea__who_name": "Who counts",
         "cea__who_desc": "Which children the alert and the auto-education look at.",
         "cea__who_option_1_name": "Heirs, their children and grandchildren",
@@ -640,7 +640,7 @@ TEXT = {
         "cea__future_royals_name": "Future royals only",
         "cea__future_royals_desc": "Narrows Who counts: of the children it picks, only those stay who will be in the crown estate once the first heir rules, the heir and the heir's close relatives (children, grandchildren, siblings, nephews and nieces, parents, aunts and uncles). For example, the children of the heir's siblings stay, while the heir's cousins and their children drop out: they become nobles when the ruler changes.",
         "cea__auto_name": "Auto-education",
-        "cea__auto_desc": "Once a month, sets an education for children on the balanced education or none. Educations you chose yourself are kept.",
+        "cea__auto_desc": "Once a month, sets an education for children on the balanced education. Educations you chose yourself are kept.",
         "cea__auto_option_1_name": "Off", "cea__auto_option_1_desc": "You pick the education.",
         "cea__auto_option_2_name": "By traits", "cea__auto_option_2_desc": "Intelligent: administrative, gregarious: diplomatic, rowdy: military; ambitious, gallant and shrewd: the higher of their two skills; anyone else: the best skill.",
         "cea__auto_option_3_name": "Administrative", "cea__auto_option_3_desc": "An administrative education for every child.",
@@ -648,7 +648,7 @@ TEXT = {
         "cea__auto_option_5_name": "Military", "cea__auto_option_5_desc": "A military education for every child.",
         "CEA_OPEN_SETTINGS": "Child Education settings",
         "cea_child_education_name": "Children can have a better education",
-        "cea_child_education_tooltip": "One or more children get the balanced education or haven't started one yet. "
+        "cea_child_education_tooltip": "One or more children are on the balanced education. "
                                        "An administrative, diplomatic or military education makes that skill grow faster.\\n\\n"
                                        "A click opens the children's cards in turn. Who counts is set in the mod menu. Checked once a month.",
     },
