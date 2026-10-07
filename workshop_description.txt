@@ -1,5 +1,5 @@
 [h1]Child Education[/h1]
-Since 1.4 the game tracks the education of the direct heir only. Nothing tells you when the other heirs' children and grandchildren need one, so they grow up on the balanced education or with none at all.
+Since 1.4 the game tracks the education of the direct heir only. Nothing tells you when the other heirs' children and grandchildren need one, so they grow up on the balanced education the game gives every child.
 
 This mod brings back the alert for children who could get a better education, and can pick their education for you.
 
@@ -7,7 +7,7 @@ This mod brings back the alert for children who could get a better education, an
 
 [h2]Alert[/h2]
 [list]
-[*]An alert on the Community Mod Framework alert bar when a child gets the balanced education or none yet.
+[*]An alert on the Community Mod Framework alert bar when a child is on the balanced education.
 [*]Its tooltip names the children. Clicking it opens their cards one after another.
 [*]Checked once a month. Children under 3 are left alone, as in the game.
 [/list]
