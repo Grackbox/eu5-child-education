@@ -1,6 +1,6 @@
-# Child Education + Education Fix (EU5 mods)
+# Child Education (EU5 mod)
 
-`cea_build.py` builds two Europa Universalis V mods:
+`cea_build.py` builds the Europa Universalis V mod Child Education.
 
 ## Child Education
 Brings back the alert for children who could get a better education (EU5 1.4 dropped it for anyone but the heir),
@@ -17,14 +17,10 @@ with automatic education. Needs the Community Mod Framework (alert bar and mod m
   the game folder (`GAME` in the script).
 - Children under 3 are left alone (the game's `EDUCATION_AGE` and `CHILD_TRAIT_AGE`).
 
-## Education Fix (Kipsta)
-Kipsta's fix from the Paradox forum thread "Education bugged, all characters now idiots": rebalanced child traits and
-educations twice as strong as in vanilla 1.4. No dependencies.
-
 ## Build
 
 ```
-python cea_build.py    # writes mod/child_education_alert and mod/education_fix_kipsta in the EU5 mod folder
+python cea_build.py    # writes mod/child_education_alert in the EU5 mod folder
 ```
 
 Needs Pillow (`pip install pillow`) and the game folder (`GAME` in the script): the character window and the trait

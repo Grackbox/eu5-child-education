@@ -3,8 +3,6 @@
 * An alert (through the Community Mod Framework alert bar) for children on the balanced education:
   1.4 dropped the game's own alert for the dynasty's children.
 * Settings in the CMF mod menu: the alert on/off, which children count, and automatic education.
-* Kipsta's education fix (Paradox forum, "Education bugged, all characters now idiots") goes into a mod of its own,
-  so it can be used without the alert.
 """
 import json
 import os
@@ -12,7 +10,6 @@ import re
 import shutil
 
 OUT = os.path.expanduser("~/Documents/Paradox Interactive/Europa Universalis V/mod/child_education_alert")
-FIX_OUT = os.path.expanduser("~/Documents/Paradox Interactive/Europa Universalis V/mod/education_fix_kipsta")
 GAME = r"E:\SteamLibrary\steamapps\common\Europa Universalis V\game"   # the vanilla character window is patched from here
 CMF = r"E:\SteamLibrary\steamapps\workshop\content\3450310\3692202776"   # Community Mod Framework, for its alert tooltip fix
 LANGS = ["english", "russian", "german", "french", "spanish", "braz_por", "polish", "turkish", "japanese", "korean", "simp_chinese"]
@@ -521,70 +518,6 @@ cea_show_next_child = {
 }
 """
 
-TRAITS = [  # Kipsta's values: (trait, modifier lines, chance base)
-    ("child_prodigy", ["character_child_education = 0.8"], 1),
-    ("child_gifted", ["character_child_education = 0.6"], 1),
-    ("child_slow", ["character_child_education = 0"], 1),
-    ("child_idiot", ["character_child_education = -0.3"], 1),
-    ("child_intelligent", ["character_adm_child_education = 0.66", "character_dip_child_education = 0.22", "character_mil_child_education = 0.22"], 3),
-    ("child_gregarious", ["character_adm_child_education = 0.22", "character_dip_child_education = 0.66", "character_mil_child_education = 0.22"], 3),
-    ("child_rowdy", ["character_adm_child_education = 0.22", "character_dip_child_education = 0.22", "character_mil_child_education = 0.66"], 3),
-    ("child_ambitious", ["character_adm_child_education = 0.66", "character_dip_child_education = 0.66"], 2),
-    ("child_gallant", ["character_dip_child_education = 0.66", "character_mil_child_education = 0.66"], 2),
-    ("child_shrewd", ["character_mil_child_education = 0.66", "character_adm_child_education = 0.66"], 2),
-]
-
-EDUCATIONS = """# Education fix by Kipsta (Paradox forum, "Education bugged, all characters now idiots"):
-# educations give twice the vanilla 1.4 effect.
-REPLACE:balanced_education = {
-	allow = {
-	}
-	modifier = {
-		character_child_education_modifier = 1
-	}
-}
-
-REPLACE:administrative_education = {
-	allow = {
-	}
-	modifier = {
-		character_child_education_modifier = 0.5
-		character_adm_child_education_modifier = 1.5
-	}
-}
-
-REPLACE:diplomatic_education = {
-	allow = {
-	}
-	modifier = {
-		character_child_education_modifier = 0.5
-		character_dip_child_education_modifier = 1.5
-	}
-}
-
-REPLACE:military_education = {
-	allow = {
-	}
-	modifier = {
-		character_child_education_modifier = 0.5
-		character_mil_child_education_modifier = 1.5
-	}
-}
-
-REPLACE:expensive_in_depth_education = {
-	allow = {
-	}
-	price_to_select = select_expensive_child_education
-	price_to_deselect = deselect_expensive_child_education
-	modifier = {
-		character_child_education_modifier = 2.0
-	}
-	country_modifier = {
-		court_spending_efficiency = -0.05
-	}
-}
-"""
-
 TEXT = {
     "russian": {
         "cea_name": "Образование детей",
@@ -710,19 +643,9 @@ def character_window():
     return text
 
 
-def traits():
-    out = ["# Education fix by Kipsta (Paradox forum, \"Education bugged, all characters now idiots\"):",
-           "# the 1.4 child traits gave too little education, so most children grew up with low skills.", ""]
-    for name, mods, base in TRAITS:
-        body = "\n".join("\t\t" + m for m in mods)
-        out.append(f"REPLACE:{name} = {{\n\tcategory = child\n\tmodifier = {{\n{body}\n\t}}\n\tchance = {{\n\t\tbase = {base}\n\t}}\n}}\n")
-    return "\n".join(out)
-
-
 def main():
-    for d in (OUT, FIX_OUT):
-        if os.path.isdir(d):
-            shutil.rmtree(d)
+    if os.path.isdir(OUT):
+        shutil.rmtree(OUT)
     # one tab, a row per trait (paid_traits list item n = PAID[n-1]) with a box for boys (field slot 1) and for girls (slot 2)
     paid_traits = "".join(f"\t\tAND = {{\n\t\t\tis_female = {'yes' if x == 'f' else 'no'}\n\t\t\thas_trait = {t}\n"
                           f"\t\t\thas_global_variable = cea_paid{x}_{t}\n\t\t}}\n" for x in "mf" for t in PAID)
@@ -760,13 +683,6 @@ def main():
     alerts = cmf_alert_manager()
     if alerts:
         write("in_game/gui/cmf/cmf_alert_manager.gui", alerts)
-    write("in_game/common/traits/kef_child_traits_fix.txt", traits(), FIX_OUT)
-    write("in_game/common/child_educations/kef_education_fix.txt", EDUCATIONS, FIX_OUT)
-    fix_meta = {"name": "Education Fix (Kipsta) [LOCAL]", "id": "grackbox.education_fix_kipsta", "version": "1.0.0", "game_id": "eu5",
-                "supported_game_version": "1.4.*",
-                "short_description": "Kipsta's fix for 1.4 child education: stronger educations and rebalanced child traits.",
-                "tags": ["Balance", "1.4"], "relationships": [], "game_custom_data": {}}
-    write(".metadata/metadata.json", json.dumps(fix_meta, indent=4, ensure_ascii=False) + "\n", FIX_OUT)
     for lang in LANGS:
         lines = dict(TEXT.get(lang, TEXT["english"]), **COMMON)
         ru = lang == "russian"
@@ -790,7 +706,7 @@ def main():
             lines[f"cea__paid_traits_i{n}_name"] = f"@cea_{t}! [ShowTraitName('{t}')]"
         write(f"main_menu/localization/{lang}/cea_l_{lang}.yml",
               f"l_{lang}:\n" + "".join(f' {k}: "{v}"\n' for k, v in lines.items()))
-    meta = {"name": "Child Education [LOCAL]", "id": "grackbox.child_education_alert", "version": "1.0.0", "game_id": "eu5",
+    meta = {"name": "Child Education [LOCAL]", "id": "grackbox.child_education_alert", "version": "1.0.1", "game_id": "eu5",
             "supported_game_version": "1.4.*",
             "short_description": "Alert and auto-education for heirs and their children.",
             "tags": ["Utilities", "1.4"],
