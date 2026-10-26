@@ -1,0 +1,21 @@
+# The CMF alert's click sets the GUI variable cea_open_child; this widget then opens the current child's card and moves on.
+widget = {
+	name = "cea_open_child_widget"
+	size = { 0 0 }
+	datacontext = "[GetPlayer.MakeScope.GetVariable('cea_current').GetCharacter]"
+	visible = "[GetVariableSystem.Exists('cea_open_child')]"
+	state = {
+		name = _show
+		next = cea_next_child
+		on_start = "[ShowCharacter(Character.Self)]"
+	}
+	state = {
+		name = cea_next_child
+		next = cea_done
+		on_start = "[GetScriptedGui('cea_show_next_child').Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	}
+	state = {
+		name = cea_done
+		on_start = "[GetVariableSystem.Clear('cea_open_child')]"
+	}
+}

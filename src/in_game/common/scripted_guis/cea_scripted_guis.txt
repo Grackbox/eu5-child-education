@@ -1,0 +1,26 @@
+# Scope: country (CMF's home country). "Places in line" is greyed out unless "Who counts" is the heirs option; CMF reads
+# is_valid from <mod>__<setting>_on_changed. Not is_shown: hiding the row right under the "Who counts" dropdown re-laid
+# the menu out while the dropdown was closing, and it then showed the old option and would not open again.
+cea__depth_on_changed = {
+	scope = country
+	is_valid = {
+		NOT = { global_var:cea_who ?= 2 }
+	}
+}
+
+# Scope: country (CMF's home country). CMF needs this for a list setting: it applies the click, then the settings are
+# copied as on any other change.
+cea__paid_traits_on_changed = {
+	scope = country
+	effect = {
+		cmm_apply_list_change = { setting = cea__paid_traits }
+		cea_sync_settings = yes
+	}
+}
+
+# Scope: country. After a click opened a child's card, the next click opens the next one.
+cea_show_next_child = {
+	effect = {
+		cea_advance_current = yes
+	}
+}

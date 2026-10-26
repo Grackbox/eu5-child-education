@@ -1,0 +1,1 @@
+gui/cea_open_child.gui = cea_open_child_widget

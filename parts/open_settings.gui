@@ -1,0 +1,10 @@
+action_tooltip = {
+	click_type = right
+	click_mode = single
+	visible = "[Not(UIActionProvider.IsRightClickVisible)]"
+	title = "CEA_OPEN_SETTINGS"
+	on_action = "[GetScriptedGui(Select_CString(Or(Not(GameIsMultiplayer), IsHost), 'CMM_SetHostAndRegisterCoreMod', 'CMM_RegisterCoreMod')).Execute(GuiScope.SetRoot(GetPlayer.MakeScope).End)]"
+	on_action = "[GetVariableSystem.Set('cmm_window_open', 'true')]"
+	on_action = "[GetVariableSystem.Set('cmm_selected_mod', 'cea')]"
+	on_action = "[GetVariableSystem.Set('cmm_selected_tab', 'cea__settings')]"
+}
