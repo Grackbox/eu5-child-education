@@ -234,7 +234,7 @@ def main():
             lines[f"cea__paid_traits_i{n}_name"] = f"@cea_{t}! [ShowTraitName('{t}')]"
         write(f"main_menu/localization/{lang}/cea_l_{lang}.yml",
               f"l_{lang}:\n" + "".join(f' {k}: "{v}"\n' for k, v in lines.items()))
-    meta = {"name": "Child Education [LOCAL]", "id": "grackbox.child_education_alert", "version": "1.0.1", "game_id": "eu5",
+    meta = {"name": "Child Education [LOCAL]", "id": "grackbox.child_education_alert", "version": "1.0.2", "game_id": "eu5",
             "supported_game_version": "1.4.*",
             "short_description": "Alert and auto-education for heirs and their children.",
             "tags": ["Utilities", "1.4"],
